@@ -1,0 +1,85 @@
+services:
+  headscale:
+    image: 'headscale/headscale:latest'
+    container_name: 'headscale'
+    restart: 'unless-stopped'
+    command: 'serve'
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs:/etc/headscale'
+    environment:
+      TZ: 'America/Edmonton'
+
+        # these are the labels for traefik reverse proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.headscale.rule=Host(`headscale.yourdomain.com`)"
+      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale.entrypoints=websecure"
+      - "traefik.http.routers.headscale.tls=true"
+      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
+
+  headplane:
+    container_name: headplane
+    image: ghcr.io/tale/headplane:latest
+    restart: unless-stopped
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs:/etc/headscale'
+      - './headplane:/etc/headplane'
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    environment:
+      # This is always required for Headplane to work
+      COOKIE_SECRET: 'abcdefghijklmnopqrstuvwxyz'
+      HEADSCALE_INTEGRATION: 'docker'
+      HEADSCALE_CONTAINER: 'headscale'
+      DISABLE_API_KEY_LOGIN: 'false'
+      HOST: '0.0.0.0'
+      PORT: '3000'
+        
+      # Only set this to false if you aren't behind a reverse proxy
+      COOKIE_SECURE: 'true'
+
+      # Overrides the configuration file values if they are set in config.yaml
+      # If you want to share the same OIDC configuration you do not need this
+      #OIDC_CLIENT_ID: 'headscale'
+      #OIDC_ISSUER: 'https://sso.example.com'
+      #OIDC_CLIENT_SECRET: 'super_secret_client_secret'
+
+      # This NEEDS to be set with OIDC, regardless of what's in the config
+      # This needs to be a very long-lived (999 day) API key used to create
+      # shorter ones for OIDC and allow the OIDC functionality to work
+      # ROOT_API_KEY: 'abcdefghijklmnopqrstuvwxyz'
+    
+      # These are the labels for traefik reverse proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.headplane.rule=Host(`headscale.yourdomain.com`) && PathPrefix(`/admin`)"
+      - "traefik.http.routers.headplane.entrypoints=websecure"
+      - "traefik.http.routers.headplane.tls=true"
+      - "traefik.http.services.headplane.loadbalancer.server.port=3000"
+
+  traefik:
+    image: "traefik:v3.3"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=you@youremail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
