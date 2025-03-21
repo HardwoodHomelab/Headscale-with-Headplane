@@ -6,7 +6,7 @@ services:
     command: 'serve'
     volumes:
       - './data:/var/lib/headscale'
-      - './configs:/etc/headscale'
+      - './configs/headscale:/etc/headscale'
     environment:
       TZ: 'America/Edmonton'
 
@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     volumes:
       - './data:/var/lib/headscale'
-      - './configs:/etc/headscale'
+      - './configs/headplane:/etc/headscale'
       - './headplane:/etc/headplane'
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
     environment:
