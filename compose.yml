@@ -25,8 +25,8 @@ services:
     restart: unless-stopped
     volumes:
       - './data:/var/lib/headscale'
-      - './configs/headplane:/etc/headscale'
-      - './headplane:/etc/headplane'
+      - './configs/headscale:/etc/headscale'
+      - './configs/headplane:/etc/headplane'
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
     environment:
       # This is always required for Headplane to work
