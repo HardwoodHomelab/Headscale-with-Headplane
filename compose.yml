@@ -56,7 +56,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.headplane.rule=Host(`headscale.yourdomain.com`) && PathPrefix(`/admin`)"
       
-      ## use this to limit access to Headplane using Tailnet DNS ** This is not truly secure **\
+      ## Replace the above line with this to limit access to Headplane using Tailnet DNS ** This is not truly secure **\
       #- "traefik.http.routers.headplane.rule=Host(`headscale.yourdomain.internal`) && PathPrefix(`/admin`)"
       
       - "traefik.http.routers.headplane.entrypoints=websecure"
