@@ -55,9 +55,17 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.headplane.rule=Host(`headscale.yourdomain.com`) && PathPrefix(`/admin`)"
+      
+      ## use this to limit access to Headplane using Tailnet DNS ** This is not truly secure **\
+      #- "traefik.http.routers.headplane.rule=Host(`headscale.yourdomain.com`) && PathPrefix(`/admin`)"
+      
       - "traefik.http.routers.headplane.entrypoints=websecure"
       - "traefik.http.routers.headplane.tls=true"
       - "traefik.http.services.headplane.loadbalancer.server.port=3000"
+      
+      ## use these 2 lines for limiting access to Headscale by IP
+      #- "traefik.http.middlewares.ipallowlist.ipallowlist.sourcerange=<put.your.ip.here>/32"
+      #- "traefik.http.routers.headplane.middlewares=ipallowlist@docker"
 
   traefik:
     image: "traefik:v3.3"
