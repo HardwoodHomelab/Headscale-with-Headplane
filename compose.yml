@@ -4,6 +4,8 @@ services:
     container_name: 'headscale'
     restart: 'unless-stopped'
     command: 'serve'
+    ports:
+      - "3478:3478"
     volumes:
       - './data:/var/lib/headscale'
       - './configs/headscale:/etc/headscale'
